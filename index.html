@@ -1,14 +1,201 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LMS System Home Page</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LMS - Learning Management System</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#f4f6fb;color:#202943}
+header{background:#172554;color:white;padding:20px 28px;display:flex;justify-content:space-between;align-items:center}
+header h2{font-size:22px}
+header span{font-size:13px;color:#c7d2fe}
+.layout{display:flex;min-height:calc(100vh - 68px)}
+nav{width:220px;background:#fff;padding:22px 12px;box-shadow:2px 0 8px #00000008}
+nav button{display:block;width:100%;text-align:left;padding:13px;margin-bottom:7px;border:0;border-radius:7px;background:white;color:#34415e;cursor:pointer;font-size:15px}
+nav button:hover,nav button.active{background:#e8edff;color:#293fc0}
+main{padding:28px;flex:1;min-width:0}
+h1{font-size:27px;margin-bottom:8px}
+.subtitle{color:#7b8499;margin-bottom:25px}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(130px,1fr));gap:16px;margin-bottom:26px}
+.card{background:white;border-radius:12px;padding:22px;box-shadow:0 3px 12px #18254b09}
+.card p{color:#737f96;font-size:14px;margin-bottom:12px}
+.card h2{font-size:28px;color:#253bb0}
+.section{background:white;border-radius:12px;padding:22px;margin-bottom:20px}
+.section-head{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:18px}
+button.primary{background:#3448d4;color:white;border:0;border-radius:7px;padding:10px 14px;cursor:pointer}
+input,select{padding:11px;border:1px solid #dce1ec;border-radius:7px;width:100%;margin:6px 0 12px}
+table{width:100%;border-collapse:collapse}
+th,td{text-align:left;padding:14px 10px;border-bottom:1px solid #edf0f6;font-size:14px}
+th{color:#77819a;font-weight:600}
+.tag{background:#e1f7e9;color:#188348;padding:5px 9px;border-radius:20px;font-size:12px}
+.actions{display:flex;gap:8px}
+.actions button{padding:6px 9px;border:0;border-radius:5px;cursor:pointer}
+.delete{background:#fee2e2;color:#b91c1c}
+.empty{padding:25px;color:#7b8499;text-align:center}
+.course-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px}
+.course{border:1px solid #e7eaf2;border-radius:10px;padding:20px}
+.course .icon{font-size:30px;margin-bottom:12px}
+.course h3{margin-bottom:9px}
+.course p{font-size:14px;color:#77819a;margin-bottom:15px}
+form{max-width:500px}
+#notice{position:fixed;bottom:20px;right:20px;background:#172554;color:white;padding:14px 20px;border-radius:8px;display:none}
+@media(max-width:850px){.stats{grid-template-columns:repeat(2,1fr)}nav{width:160px}main{padding:18px}.section{overflow-x:auto}}
+@media(max-width:550px){.layout{display:block}nav{width:100%;display:flex;overflow-x:auto;padding:8px}nav button{min-width:max-content;width:auto;margin:0 4px}main{padding:14px}.stats{gap:9px}.card{padding:14px}.card h2{font-size:22px}header{padding:17px}.section{padding:14px}}
+</style>
 </head>
 <body>
-    <h1>Welcome to the LMS System</h1>
-    <p>This is the home page for the Learning Management System.</p>
-    
+<header>
+  <h2>🎓 EduLearn LMS</h2>
+  <span>Learning Management System</span>
+</header>
+<div class="layout">
+<nav>
+  <button class="active" onclick="showPage('Dashboard',this)">📊 Dashboard</button>
+  <button onclick="showPage('Courses',this)">📚 Courses</button>
+  <button onclick="showPage('Students',this)">👨‍🎓 Students</button>
+  <button onclick="showPage('Assignments',this)">📝 Assignments</button>
+</nav>
+<main>
+  <h1 id="pageTitle">Dashboard</h1>
+  <p class="subtitle">Welcome to your learning management dashboard.</p>
+  <div id="content"></div>
+</main>
+</div>
+<div id="notice"></div>
+<script>
+const initialCourses=[
+ {name:"Web Development",teacher:"John Smith",level:"Beginner"},
+ {name:"Python Programming",teacher:"Sarah Johnson",level:"Intermediate"},
+ {name:"Data Science",teacher:"David Wilson",level:"Advanced"}
+];
+const initialStudents=[
+ {name:"Alex Kumar",email:"alex@example.com",course:"Web Development"},
+ {name:"Priya Sharma",email:"priya@example.com",course:"Python Programming"},
+ {name:"Rahul Verma",email:"rahul@example.com",course:"Data Science"}
+];
+let courses=initialCourses;
+let students=initialStudents;
+let assignments=[
+ {title:"HTML Basics",course:"Web Development",due:"2026-11-01"},
+ {title:"Python Loops",course:"Python Programming",due:"2026-11-05"}
+];
+let currentPage="Dashboard";
 
+function esc(s){
+ return String(s).replace(/[&<>"']/g,c=>({
+  "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+ }[c]));
+}
+function notify(msg){
+ const n=document.getElementById("notice");
+ n.textContent=msg;n.style.display="block";
+ setTimeout(()=>n.style.display="none",2200);
+}
+function showPage(page,btn){
+ currentPage=page;
+ document.getElementById("pageTitle").textContent=page;
+ document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
+ if(btn)btn.classList.add("active");
+ render();
+}
+function render(){
+ const root=document.getElementById("content");
+ if(currentPage==="Dashboard"){
+ root.innerHTML=`
+ <div class="stats">
+  <div class="card"><p>Total Courses</p><h2>${courses.length}</h2></div>
+  <div class="card"><p>Total Students</p><h2>${students.length}</h2></div>
+  <div class="card"><p>Assignments</p><h2>${assignments.length}</h2></div>
+  <div class="card"><p>Learning Platform</p><h2>Active</h2></div>
+ </div>
+ <div class="section"><div class="section-head"><h3>Recent Courses</h3>
+ <button class="primary" onclick="go('Courses')">View Courses</button></div>
+ <div class="course-grid">${courses.slice(0,3).map((c,i)=>`
+ <div class="course"><div class="icon">${["💻","🐍","📈"][i%3]}</div>
+ <h3>${esc(c.name)}</h3><p>Instructor: ${esc(c.teacher)}</p>
+ <span class="tag">${esc(c.level)}</span></div>`).join("")||'<p>No courses yet.</p>'}</div></div>
+ <div class="section"><h3>Recent Students</h3>${studentTable(false)}</div>`;
+ }
+ if(currentPage==="Courses"){
+ root.innerHTML=`
+ <div class="section"><h3>Add a Course</h3><br>
+ <form onsubmit="addCourse(event)">
+ <label>Course name</label><input id="cname" required placeholder="e.g. Java Programming">
+ <label>Instructor name</label><input id="teacher" required placeholder="Instructor">
+ <label>Level</label><select id="level"><option>Beginner</option><option>Intermediate</option><option>Advanced</option></select>
+ <button class="primary">Add Course</button></form></div>
+ <div class="section"><h3>All Courses (${courses.length})</h3><br>
+ <div class="course-grid">${courses.map((c,i)=>`
+ <div class="course"><div class="icon">${["💻","🐍","📈","📘"][i%4]}</div>
+ <h3>${esc(c.name)}</h3><p>Instructor: ${esc(c.teacher)}</p>
+ <span class="tag">${esc(c.level)}</span><br><br>
+ <button class="delete" onclick="removeCourse(${i})">Delete</button></div>`).join("")||'<p>No courses available.</p>'}</div></div>`;
+ }
+ if(currentPage==="Students"){
+ root.innerHTML=`
+ <div class="section"><h3>Register Student</h3><br>
+ <form onsubmit="addStudent(event)">
+ <label>Full name</label><input id="sname" required placeholder="Student name">
+ <label>Email</label><input id="email" type="email" required placeholder="student@example.com">
+ <label>Course</label><select id="scourse">${courses.map(c=>`<option>${esc(c.name)}</option>`).join("")}</select>
+ <button class="primary">Register Student</button></form></div>
+ <div class="section"><h3>All Students (${students.length})</h3>${studentTable(true)}</div>`;
+ }
+ if(currentPage==="Assignments"){
+ root.innerHTML=`
+ <div class="section"><h3>Create Assignment</h3><br>
+ <form onsubmit="addAssignment(event)">
+ <label>Assignment title</label><input id="atitle" required placeholder="Assignment name">
+ <label>Course</label><select id="acourse">${courses.map(c=>`<option>${esc(c.name)}</option>`).join("")}</select>
+ <label>Due date</label><input id="due" type="date" required>
+ <button class="primary">Create Assignment</button></form></div>
+ <div class="section"><h3>All Assignments (${assignments.length})</h3>
+ <table><thead><tr><th>Title</th><th>Course</th><th>Due date</th><th>Action</th></tr></thead><tbody>
+ ${assignments.map((a,i)=>`<tr><td>${esc(a.title)}</td><td>${esc(a.course)}</td><td>${esc(a.due)}</td><td><button class="delete" onclick="removeAssignment(${i})">Delete</button></td></tr>`).join("")}
+ </tbody></table></div>`;
+ }
+}
+function studentTable(canDelete){
+ return `<table><thead><tr><th>Name</th><th>Email</th><th>Course</th>${canDelete?"<th>Action</th>":""}</tr></thead><tbody>
+ ${students.map((s,i)=>`<tr><td>${esc(s.name)}</td><td>${esc(s.email)}</td><td>${esc(s.course)}</td>
+ ${canDelete?`<td><button class="delete" onclick="removeStudent(${i})">Delete</button></td>`:""}</tr>`).join("")||`<tr><td colspan="4" class="empty">No students registered.</td></tr>`}
+ </tbody></table>`;
+}
+function go(page){
+ const btn=[...document.querySelectorAll("nav button")].find(b=>b.textContent.includes(page));
+ showPage(page,btn);
+}
+function addCourse(e){
+ e.preventDefault();
+ courses.push({name:document.getElementById("cname").value.trim(),teacher:document.getElementById("teacher").value.trim(),level:document.getElementById("level").value});
+ notify("Course added successfully");render();
+}
+function addStudent(e){
+ e.preventDefault();
+ const email=document.getElementById("email").value.trim();
+ if(students.some(s=>s.email.toLowerCase()===email.toLowerCase()))return notify("Email already registered");
+ students.push({name:document.getElementById("sname").value.trim(),email,course:document.getElementById("scourse").value});
+ notify("Student registered");render();
+}
+function addAssignment(e){
+ e.preventDefault();
+ assignments.push({title:document.getElementById("atitle").value.trim(),course:document.getElementById("acourse").value,due:document.getElementById("due").value});
+ notify("Assignment created");render();
+}
+function removeCourse(i){
+ const name=courses[i].name;
+ if(students.some(s=>s.course===name)||assignments.some(a=>a.course===name))return notify("Remove associated students and assignments first");
+ if(confirm("Delete this course?")){courses.splice(i,1);notify("Course deleted");render();}
+}
+function removeStudent(i){
+ if(confirm("Delete this student?")){students.splice(i,1);notify("Student deleted");render();}
+}
+function removeAssignment(i){
+ if(confirm("Delete this assignment?")){assignments.splice(i,1);notify("Assignment deleted");render();}
+}
+render();
+</script>
 </body>
 </html>
